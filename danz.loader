@@ -1,0 +1,183 @@
+-- ======================
+-- GAME CHECK (ANTI SALAH GAME)
+-- ======================
+
+local allowedPlaceId = 90226220017920
+
+local Players = game:GetService("Players")
+local player = Players.LocalPlayer
+
+repeat task.wait() until game:IsLoaded() and player and player:FindFirstChild("PlayerGui")
+
+if game.PlaceId ~= allowedPlaceId then
+    pcall(function()
+        game:GetService("StarterGui"):SetCore("SendNotification", {
+            Title = "Voytex Hub",
+            Text = "This experience is not supported by Voytex Hub.",
+            Duration = 1
+        })
+    end)
+
+    task.wait(1)
+    player:Kick("Script only works in supported game")
+end
+
+
+-- ======================
+-- LOAD RAYFIELD
+-- ======================
+
+local Rayfield = loadstring(game:HttpGet('https://sirius.menu/rayfield'))()
+
+-- Window
+local Window = Rayfield:CreateWindow({
+    Name = "Voytex Hub | Auto Fisher",
+    LoadingTitle = "Voytex Loading...",
+    LoadingSubtitle = "by FayintX",
+    ConfigurationSaving = {
+        Enabled = false
+    }
+})
+
+-- Tabs
+local FarmTab = Window:CreateTab("Auto Farm", 4483362458)
+local VisualTab = Window:CreateTab("Visual", 4483362458)
+
+-- Variables
+local looping = false
+local fullbright = false
+
+-- Rejoin Function
+local function Rejoin()
+    game:GetService("TeleportService"):Teleport(
+        game.PlaceId,
+        game:GetService("Players").LocalPlayer
+    )
+end
+
+-- ======================
+-- AUTO FARM
+-- ======================
+
+FarmTab:CreateToggle({
+    Name = "Auto Fish + Sell",
+    CurrentValue = false,
+    Callback = function(Value)
+        looping = Value
+
+        if looping then
+            spawn(function()
+                while looping do
+                    local start = tick()
+
+                    -- Fishing 30 detik
+                    while looping and tick() - start < 30 do
+                        game:GetService("ReplicatedStorage").FishingSystem.FishGiver:FireServer({
+                            rarity = "Mitos",
+                            name = "Kraken",
+                            weight = 800
+                        })
+                        task.wait()
+                    end
+
+                    -- Auto Sell
+                    if looping then
+                        pcall(function()
+                            game:GetService("ReplicatedStorage")
+                                .FishingSystem
+                                .InventoryEvents
+                                .Inventory_SellAll
+                                :InvokeServer()
+                        end)
+                    end
+                end
+            end)
+        end
+    end
+})
+
+FarmTab:CreateButton({
+    Name = "Rejoin Server",
+    Callback = function()
+        Rejoin()
+    end
+})
+
+-- ======================
+-- VISUAL TAB
+-- ======================
+
+-- Fullbright
+VisualTab:CreateToggle({
+    Name = "Fullbright",
+    CurrentValue = false,
+    Callback = function(Value)
+        fullbright = Value
+
+        if fullbright then
+            game:GetService("Lighting").Brightness = 2
+            game:GetService("Lighting").ClockTime = 14
+            game:GetService("Lighting").FogEnd = 100000
+            game:GetService("Lighting").GlobalShadows = false
+        else
+            game:GetService("Lighting").Brightness = 1
+            game:GetService("Lighting").ClockTime = 12
+            game:GetService("Lighting").FogEnd = 1000
+            game:GetService("Lighting").GlobalShadows = true
+        end
+    end
+})
+
+-- Remove Fog
+VisualTab:CreateButton({
+    Name = "Remove Fog",
+    Callback = function()
+        game:GetService("Lighting").FogEnd = 100000
+    end
+})
+
+-- FOV Changer
+VisualTab:CreateSlider({
+    Name = "FOV",
+    Range = {70, 120},
+    Increment = 1,
+    Suffix = "FOV",
+    CurrentValue = 70,
+    Callback = function(Value)
+        workspace.CurrentCamera.FieldOfView = Value
+    end
+})
+
+-- Simple ESP Player
+VisualTab:CreateToggle({
+    Name = "ESP Player (Highlight)",
+    CurrentValue = false,
+    Callback = function(Value)
+        for _, v in pairs(game:GetService("Players"):GetPlayers()) do
+            if v ~= game.Players.LocalPlayer and v.Character then
+                if Value then
+                    if not v.Character:FindFirstChild("Highlight") then
+                        local h = Instance.new("Highlight")
+                        h.FillColor = Color3.fromRGB(0,255,0)
+                        h.OutlineColor = Color3.fromRGB(0,0,0)
+                        h.Parent = v.Character
+                    end
+                else
+                    if v.Character:FindFirstChild("Highlight") then
+                        v.Character.Highlight:Destroy()
+                    end
+                end
+            end
+        end
+    end
+})
+
+-- ======================
+-- NOTIF
+-- ======================
+
+Rayfield:Notify({
+    Title = "Voytex Hub",
+    Content = "Auto Fisher + Visual Loaded!",
+    Duration = 5
+})
